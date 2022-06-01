@@ -3,10 +3,10 @@ type General @entity {
 
   id: ID! # '1'
 
-  relayersCount: BigInt
-  totalProposalsCount: BigInt
-  votesCount: BigInt
   totalDepositsCount: BigInt
+  totalProposalsCount: BigInt
+  totalVotesCount: BigInt
+  totalRelayersCount: BigInt
   chainId: Int!
   subgraphVersion: String!
 }
@@ -18,7 +18,7 @@ type Relayer @entity {
 
   addedTimestamp: BigInt!
   addedBlockNumber: BigInt!
-  removedTimestamp: BigInt
+  removedTimestamp: BigInt # we keep the relayer entity in store merely adding the time and block when the relayer got removed so the entity can still be queried
   removedBlockNumber: BigInt
   votes: [Vote!] @derivedFrom(field: "relayer")
   voteCount: BigInt!
@@ -29,11 +29,11 @@ type Relayer @entity {
   canceledProposals: [Proposal!] @derivedFrom(field: "canceledBy")
 
   # last updated
-  blockNumber: BigInt!
   timestamp: BigInt!
+  blockNumber: BigInt!
 }
 
-# Tracks each Deposit, we don't name this entity `Deposit` as entity names should not be identical
+# Tracks each Deposit, however we don't name this entity `Deposit` as entity names should not be identical
 # to event names as good coding practice and to avoid confusion.
 type UserDeposit @entity {
 
@@ -86,15 +86,15 @@ type ProposalCount @entity {
   count: BigInt!
 
   # last updated
-  blockNumber: BigInt!
   timestamp: BigInt!
+  blockNumber: BigInt!
 }
 
 
 # Tracks each vote
 type Vote @entity {
 
-  id: ID! # proposal ID - relayer address voting
+  id: ID! # proposal ID - address of the voting relayer
 
   relayer: Relayer!
   proposal: Proposal!
@@ -109,7 +109,7 @@ type User @entity {
 
   id: ID! # wallet address
 
-  roles: [Role!] @derivedFrom(field: "user")
+  roles: [Role!] @derivedFrom(field: "user") # this field can be queried for both active and revoked roles
 
   createdTimestamp: BigInt!
   createdBlockNumber: BigInt!
@@ -123,11 +123,11 @@ type Role @entity {
   user: User!
   role: Bytes!
   sender: Bytes!
-  currentlyHeld: Boolean!
+  currentlyHeld: Boolean! # need to check this field to ensure query returns only active roles
 
   # last updated
-  blockNumber: BigInt!
   timestamp: BigInt!
+  blockNumber: BigInt!
 }
 
 # Tracks daily data for the Bridge

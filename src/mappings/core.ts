@@ -32,8 +32,8 @@ export function handleDeposit(event: Deposit): void {
     general = new General('1')
     general.totalDepositsCount = BI_0
     general.totalProposalsCount = BI_0
-    general.votesCount = BI_0
-    general.relayersCount = BI_0
+    general.totalVotesCount = BI_0
+    general.totalRelayersCount = BI_0
     general.chainId = CHAIN_ID
     general.subgraphVersion = SUBGRAPH_VERSION
   }
@@ -73,8 +73,8 @@ export function handleProposalEvent(event: ProposalEvent): void {
     general = new General('1')
     general.totalDepositsCount = BI_0
     general.totalProposalsCount = BI_0
-    general.votesCount = BI_0
-    general.relayersCount = BI_0
+    general.totalVotesCount = BI_0
+    general.totalRelayersCount = BI_0
     general.chainId = CHAIN_ID
     general.subgraphVersion = SUBGRAPH_VERSION
   }
@@ -101,7 +101,6 @@ export function handleProposalEvent(event: ProposalEvent): void {
   let proposal = Proposal.load(eventID) as Proposal | null
   if (!proposal) {
     proposal = new Proposal(eventID)
-    proposal.deposit = userDeposit.id
     proposal.originChainId = event.params.originChainID
     proposal.destinationChainId = CHAIN_ID
     proposal.resourceId = userDeposit.resourceId
@@ -111,7 +110,6 @@ export function handleProposalEvent(event: ProposalEvent): void {
     proposal.passedBy = ''
     proposal.executedBy = ''
     proposal.canceledBy = ''
-    proposal.votes = new Array<string>(0)
     proposal.createdTimestamp = timestamp
     proposal.createdBlockNumber = blockNumber
     proposal.passedTimestamp = BI_0
@@ -122,25 +120,6 @@ export function handleProposalEvent(event: ProposalEvent): void {
     proposal.canceledBlockNumber = BI_0
   }
 
-  // update Relayer entity
-  let relayer = Relayer.load(sender) as Relayer | null
-  if (!relayer) {
-    relayer = new Relayer(sender)
-    relayer.addedTimestamp = timestamp
-    relayer.addedBlockNumber = blockNumber
-    relayer.removedTimestamp = BI_0
-    relayer.removedBlockNumber = BI_0
-    relayer.votes = new Array<string>(0)
-    relayer.voteCount = BI_0
-    relayer.threshold = BI_0
-    relayer.createdProposals = new Array<string>(0)
-    relayer.passedProposals = new Array<string>(0)
-    relayer.executedProposals = new Array<string>(0)
-    relayer.canceledProposals = new Array<string>(0)
-    relayer.timestamp = timestamp
-    relayer.blockNumber = blockNumber
-  }
-
   switch (event.params.status) {
     case 0:
       proposal.status = 'inactive'
@@ -148,7 +127,6 @@ export function handleProposalEvent(event: ProposalEvent): void {
 
     case 1:
       proposal.status = 'active'
-      relayer.createdProposals = (relayer.createdProposals as string[]).concat([proposal.id])
       break
 
     case 2:
@@ -156,7 +134,6 @@ export function handleProposalEvent(event: ProposalEvent): void {
       proposal.passedTimestamp = timestamp
       proposal.passedBlockNumber = blockNumber
       proposal.passedBy = sender
-      relayer.passedProposals = (relayer.passedProposals as string[]).concat([proposal.id])
       break
 
     case 3:
@@ -164,7 +141,6 @@ export function handleProposalEvent(event: ProposalEvent): void {
       proposal.executedTimestamp = timestamp
       proposal.executedBlockNumber = blockNumber
       proposal.executedBy = sender
-      relayer.executedProposals = (relayer.executedProposals as string[]).concat([proposal.id])
       break
 
     case 4:
@@ -172,11 +148,9 @@ export function handleProposalEvent(event: ProposalEvent): void {
       proposal.canceledTimestamp = timestamp
       proposal.canceledBlockNumber = blockNumber
       proposal.canceledBy = sender
-      relayer.canceledProposals = (relayer.canceledProposals as string[]).concat([proposal.id])
       break
   }
   proposal.save()
-  relayer.save()
 
   // create or update the ProposalCount entity
   let proposalCount = ProposalCount.load(bridge) as ProposalCount | null
@@ -207,12 +181,12 @@ export function handleProposalVote(event: ProposalVote): void {
     general = new General('1')
     general.totalDepositsCount = BI_0
     general.totalProposalsCount = BI_0
-    general.votesCount = BI_0
-    general.relayersCount = BI_0
+    general.totalVotesCount = BI_0
+    general.totalRelayersCount = BI_0
     general.chainId = CHAIN_ID
     general.subgraphVersion = SUBGRAPH_VERSION
   }
-  general.votesCount = (general.votesCount as BigInt).plus(BI_1)
+  general.totalVotesCount = (general.totalVotesCount as BigInt).plus(BI_1)
   general.save()
 
   // create Vote entity
@@ -238,7 +212,6 @@ export function handleProposalVote(event: ProposalVote): void {
 
   // update Relayer entity
   let relayer = Relayer.load(sender) as Relayer
-  relayer.votes = (relayer.votes as string[]).concat([vote.id])
   relayer.voteCount = (relayer.voteCount as BigInt).plus(BI_1)
   relayer.save()
 
@@ -256,12 +229,12 @@ export function handleRelayerAdded(event: RelayerAdded): void {
     general = new General('1')
     general.totalDepositsCount = BI_0
     general.totalProposalsCount = BI_0
-    general.votesCount = BI_0
-    general.relayersCount = BI_0
+    general.totalVotesCount = BI_0
+    general.totalRelayersCount = BI_0
     general.chainId = CHAIN_ID
     general.subgraphVersion = SUBGRAPH_VERSION
   }
-  general.relayersCount = (general.relayersCount as BigInt).plus(BI_1)
+  general.totalRelayersCount = (general.totalRelayersCount as BigInt).plus(BI_1)
   general.save()
 
   // create Relayer entity
@@ -270,13 +243,8 @@ export function handleRelayerAdded(event: RelayerAdded): void {
   relayer.addedBlockNumber = blockNumber
   relayer.removedTimestamp = BI_0
   relayer.removedBlockNumber = BI_0
-  relayer.votes = new Array<string>(0)
   relayer.voteCount = BI_0
   relayer.threshold = BI_0
-  relayer.createdProposals = new Array<string>(0)
-  relayer.passedProposals = new Array<string>(0)
-  relayer.executedProposals = new Array<string>(0)
-  relayer.canceledProposals = new Array<string>(0)
   relayer.timestamp = timestamp
   relayer.blockNumber = blockNumber
   relayer.save()
@@ -295,13 +263,13 @@ export function handleRelayerRemoved(event: RelayerRemoved): void {
     general = new General('1')
     general.totalDepositsCount = BI_0
     general.totalProposalsCount = BI_0
-    general.votesCount = BI_0
-    general.relayersCount = BI_0
+    general.totalVotesCount = BI_0
+    general.totalRelayersCount = BI_0
     general.chainId = CHAIN_ID
     general.subgraphVersion = SUBGRAPH_VERSION
   }
-  if ((general.relayersCount as BigInt).gt(BI_0)) {
-    general.relayersCount = (general.relayersCount as BigInt).minus(BI_1)
+  if ((general.totalRelayersCount as BigInt).gt(BI_0)) {
+    general.totalRelayersCount = (general.totalRelayersCount as BigInt).minus(BI_1)
   }
   general.save()
 
@@ -333,10 +301,10 @@ export function handleRoleGranted(event: RoleGranted): void {
   let user = User.load(event.params.account.toHex()) as User | null
   if (!user) {
     user = new User(event.params.account.toHex())
-    user.roles = new Array<string>(0)
     user.createdTimestamp = timestamp
     user.createdBlockNumber = blockNumber
   }
+  user.save()
 
   // create or update Role entity
   let role = Role.load(roleID) as Role | null
@@ -349,9 +317,6 @@ export function handleRoleGranted(event: RoleGranted): void {
   role.currentlyHeld = true
   role.blockNumber = blockNumber
   role.timestamp = timestamp
-
-  user.roles = concatFiltered(user.roles as string[], [role.id])
-  user.save()
   role.save()
 }
 
@@ -364,10 +329,10 @@ export function handleRoleRevoked(event: RoleRevoked): void {
   let user = User.load(event.params.account.toHex()) as User | null
   if (!user) {
     user = new User(event.params.account.toHex())
-    user.roles = new Array<string>(0)
     user.createdTimestamp = timestamp
     user.createdBlockNumber = blockNumber
   }
+  user.save()
 
   // create or update Role entity
   let role = Role.load(roleID) as Role | null
@@ -380,8 +345,5 @@ export function handleRoleRevoked(event: RoleRevoked): void {
   role.currentlyHeld = false
   role.blockNumber = event.block.number
   role.timestamp = event.block.timestamp
-
-  user.roles = concatFiltered(user.roles as string[], [role.id])
-  user.save()
   role.save()
 }
