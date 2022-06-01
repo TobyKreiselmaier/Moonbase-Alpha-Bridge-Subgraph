@@ -121,7 +121,7 @@ type Role @entity {
   id: ID! # role hash - wallet address
 
   user: User!
-  role: Bytes!
+  role: String!
   sender: Bytes!
   currentlyHeld: Boolean! # need to check this field to ensure query returns only active roles
 

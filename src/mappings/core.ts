@@ -19,7 +19,7 @@ import {
   User,
   Vote
 } from '../../generated/schema' // entities
-import { CHAIN_ID, SUBGRAPH_VERSION } from './config'
+import { CHAIN_ID, DEFAULT_ADMIN_ROLE, RELAYER_ROLE, SUBGRAPH_VERSION } from './config'
 import { updateDailyStatistic } from './dailyStatistics'
 import { BI_0, BI_1, BI_MINUS_1, getRelayerThreshold } from './helpers'
 
@@ -318,8 +318,16 @@ export function handleRoleGranted(event: RoleGranted): void {
   if (!role) {
     role = new Role(roleID)
     role.user = user.id
-    role.role = event.params.role
     role.sender = event.params.sender
+  }
+
+  // switching over strings is not yet supported in AS
+  if (event.params.role.toHex() == DEFAULT_ADMIN_ROLE) {
+    role.role = 'DEFAULT_ADMIN_ROLE'
+  } else if (event.params.role.toHex() == RELAYER_ROLE) {
+    role.role = 'RELAYER_ROLE'
+  } else {
+    role.role = 'unknown role'
   }
   role.currentlyHeld = true
   role.blockNumber = blockNumber
@@ -346,8 +354,16 @@ export function handleRoleRevoked(event: RoleRevoked): void {
   if (!role) {
     role = new Role(roleID)
     role.user = user.id
-    role.role = event.params.role
     role.sender = event.params.sender
+  }
+
+  // switching over strings is not yet supported in AS
+  if (event.params.role.toHex() == DEFAULT_ADMIN_ROLE) {
+    role.role = 'DEFAULT_ADMIN_ROLE'
+  } else if (event.params.role.toHex() == RELAYER_ROLE) {
+    role.role = 'RELAYER_ROLE'
+  } else {
+    role.role = 'unknown role'
   }
   role.currentlyHeld = false
   role.blockNumber = event.block.number

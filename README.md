@@ -6,6 +6,7 @@ This subgraph tracks activity related to the Moonbase Alpha Bridge contracts
 - Proposals
 - Votes
 - Relayers
+- Roles
 - General & Daily Statistics
 
 ## Requirements
@@ -168,6 +169,24 @@ query Relayers {
 }
 ```
 
+This example query fetches `Roles` data:
+
+```graphql
+query Roles {
+  roles(first: 5) {
+    id
+    user {
+      id
+    }
+    role
+    sender
+    currentlyHeld
+    timestamp
+    blockNumber
+  }
+}
+
+```
 This example query fetches `DailyStatistics` data:
 
 ```graphql
