@@ -1,16 +1,16 @@
 specVersion: 0.0.4
-description: The Moonbase Alpha Bridge subgraph indexes all activity related to GMI Farming on Rinkeby
+description: The Moonbase Alpha Bridge subgraph indexes all activity related to GMI Farming on Kovan
 repository: https://github.com/TobyKreiselmaier/Moonbase-Alpha-Bridge-Subgraph
 schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum/contract
     name: Bridge
-    network: rinkeby
+    network: kovan
     source:
-      address: '0x638285e837db7124ff0947251c6f20ceeb2645df' # MoonbeamBridge on Rinkeby
+      address: '0x638285e837db7124ff0947251c6f20ceeb2645df' # MoonbeamBridge on Kovan
       abi: Bridge
-      startBlock: 8660132 # contract creation
+      startBlock: 25101423 # contract creation
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6

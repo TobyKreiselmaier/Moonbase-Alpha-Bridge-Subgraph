@@ -25,8 +25,8 @@ yarn lint
 
 ## Settings
 
-- [x] Set endpoints, and subgraph-name in `.env` (for deployment to production graph-node) or `.env.local` (for deployment to local test graph-node) files. Check the `environments` folder for templates.
-- [x] Make sure `subgraph.yaml` refers to the same contracts and the same blockchain as `.env` / `.env.local`. Check the `manifests` folder for templates.
+- [x] Set endpoints, and subgraph-name in `.env.local` (for deployment to local test graph-node) files.
+- [x] Make sure `subgraph.yaml` refers to the same contracts and the same blockchain as `.env.local`. Check the `manifests` folder for templates.
 - [x] Ensure that the startblocks are the creation blocks of the related contracts in `subgraph.yaml`
 - [x] Set the correct chain in `src/config.ts` according to the blockchain you're intending to use by using comments.
 
