@@ -2,9 +2,11 @@
 
 This subgraph tracks activity related to the Moonbase Alpha Bridge contracts
 
-- deposits
-- proposals
-- relayers
+- Deposits
+- Proposals
+- Votes
+- Relayers
+- General & Daily Statistics
 
 ## Requirements
 
@@ -35,11 +37,11 @@ yarn codegen
 yarn build
 ```
 
-If you want to deploy to a local graph-node, you can do so by following the instructions here: https://git.energi.software/energi/tech/defi/swap/graph-node.
+If you want to deploy to a local graph-node, you can do so by following the instructions here: https://github.com/graphprotocol/graph-node/blob/master/README.md.
 
 ## Deployment to local graph-node
 
-Run the following commands to deploy the GMI subgraph to a local graph-node:
+Run the following commands to deploy the Moonbase Alpha Bridge subgraph to a local graph-node:
 
 ```sh
 yarn create-local
@@ -48,7 +50,7 @@ yarn deploy-local
 
 ### Deployment to remote graph-node
 
-Run the following commands to deploy the GMI subgraph to a remote graph-node:
+Run the following commands to deploy the Moonbase Alpha Bridge subgraph to a remote graph-node:
 
 ```sh
 yarn run create
@@ -57,153 +59,126 @@ yarn run deploy
 
 ### Querying Data
 
-This example query fetches `Farming` data:
+This example query fetches `General` statistical data:
 
 ```graphql
-query Farming {
-  farming(id: "1") {
-    poolCount
-    totalStaked
-    totalStakedUSD
-    totalRewardsPaid
-    totalRewardsPaidUSD
-    coinUSDPrice
-    gmiUSDPrice
-    lpTokenUSDPrice
+query General {
+  general(id: "1") {
+    totalDepositsCount
+    totalProposalsCount
+    totalVotesCount
+    totalRelayersCount
     chainId
     subgraphVersion
   }
 }
 ```
 
-This example query fetches `Pool` data:
+This example query fetches `Deposits` data:
 
 ```graphql
-query Pools {
-  pools(first: 5) {
+query Deposits {
+  userDeposits(first: 5) {
     id
-    lockingPeriodSeconds
-    allocationPoints
-    lpToken
-    token0
-    token1
-    totalPoolStake
-    totalPoolStakeUSD
-    totalRewardsPaid
-    totalRewardsPaidUSD
-    createdAtBlockNumber
-    createdAtTimestamp
+    originChainId
+    destinationChainId
+    resourceId
+    nonce
+    createdTimestamp
+    createdBlockNumber
   }
 }
 ```
 
-This example query fetches `PoolReward` data:
+This example query fetches `Proposals` data:
 
 ```graphql
-query PoolRewards {
-  poolRewards(first: 5) {
+query Proposals {
+  proposals(first: 5) {
     id
-    pool
-    rewardsPerTokenPerSecond
-    rewardsPerTokenPerSecondUSD
-  }
-}
-```
-
-This example query fetches `User` data:
-
-```graphql
-query Users {
-  users(first: 5) {
-    id
-    stakes(first: 3) {
+    originChainId
+    destinationChainId
+    resourceId
+    status
+    dataHash
+    createdBy(first: 1) {
       id
     }
-    withdrawals(first: 3) {
+    passedBy(first: 1) {
       id
     }
-    rewardsReceived
-    rewardsReceivedUSD
-    createdAtTimestamp
-    createdAtBlockNumber
+    executedBy(first: 1) {
+      id
+    }
+    canceledBy(first: 1) {
+      id
+    }
+    createdTimestamp
+    createdBlockNumber
+    passedTimestamp
+    passedBlockNumber
+    executedTimestamp
+    executedBlockNumber
+    canceledTimestamp
+    canceledBlockNumber
   }
 }
 ```
 
-This example query fetches `FarmingReward` data:
+This example query fetches `Votes` data:
 
 ```graphql
-query FarmingRewards {
-  farmingRewards(first: 5) {
+query Votes {
+  votes(first: 5) {
     id
-    user
-    pool
-    rewardsPaid
-    rewardsPaidUSD
+    approved
+    votedTimestamp
+    votedBlockNumber
   }
 }
 ```
 
-This example query fetches `UserPoolStake` data:
+This example query fetches `Relayers` data:
 
 ```graphql
-query UserPoolStakes {
-  userPoolStakes(first: 5) {
+query Relayers {
+  relayers(first: 1) {
     id
-    pool
-    user
-    lockedUntilTimeStamp
-    staked
-    stakedUSD
+    addedTimestamp
+    addedBlockNumber
+    removedTimestamp
+    removedBlockNumber
+    voteCount
+    threshold
+    createdProposals(first: 3) {
+      id
+    }
+    passedProposals(first: 3) {
+      id
+    }
+    executedProposals(first: 3) {
+      id
+    }
+    canceledProposals(first: 3) {
+      id
+    }
+    timestamp
+    blockNumber
   }
 }
 ```
 
-This example query fetches `UserPoolWithdrawal` data:
+This example query fetches `DailyStatistics` data:
 
 ```graphql
-query UserPoolWithdrawals {
-  userPoolWithdrawals(first: 5) {
-    id
-    pool
-    user
-    withdrawn
-    withdrawnUSD
-  }
-}
-```
-
-This example query fetches `DailyFarmingStatistic`:
-
-```graphql
-query DailyFarmingStatistics {
-  dailyFarmingStatistics(first: 5) {
-    id
-    date
-    stakedUSD
-    withdrawnUSD
-    rewardsPaid
-    rewardsPaidUSD
-    txns
-  }
-}
-```
-
-This example query fetches `DailyPoolStatistic`:
-
-```graphql
-query DailyPoolStatistics {
-  dailyPoolStatistics(first: 5) {
+query DailyStatistics {
+  dailyStatistics(first: 5, orderBy: date, orderDirection: desc) {
     id
     date
-    pool
-    staked
-    stakedUSD
-    withdrawn
-    withdrawnUSD
-    rewardsPaid
-    rewardsPaidUSD
-    txns
+    depositsCount
+    proposalsCount
+    votesCount
+    relayersCount
   }
 }
 ```
