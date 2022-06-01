@@ -1,6 +1,6 @@
 # Moonbase Alpha Bridge Subgraph
 
-This subgraph tracks activity related to the Moonbase Alpha Bridge contracts
+This subgraph tracks activity related to the Moonbase Alpha Bridge contract
 
 - Deposits
 - Proposals
@@ -11,7 +11,7 @@ This subgraph tracks activity related to the Moonbase Alpha Bridge contracts
 
 ## Requirements
 
-- node v16.14+
+- node v16+
 - yarn v1.22+
 - [The Graph Hosted Service](https://thegraph.com/hosted-service/)
 
