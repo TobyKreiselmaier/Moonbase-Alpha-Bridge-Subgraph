@@ -1,4 +1,6 @@
-import { BigInt } from '@graphprotocol/graph-ts'
+import { Address, BigInt } from '@graphprotocol/graph-ts'
+import { Bridge } from '../../generated/Bridge/Bridge'
+import { BRIDGE } from './config'
 
 export const SECONDS_PER_DAY = 86400
 
@@ -6,8 +8,14 @@ export let BI_MINUS_1 = BigInt.fromI32(-1)
 export let BI_0 = BigInt.fromI32(0)
 export let BI_1 = BigInt.fromI32(1)
 
-export function concatFiltered(arr1: string[], arr2: string[]): string[] {
-  let array = arr1.concat(arr2)
+export function getRelayerThreshold(): BigInt {
+  let contract = Bridge.bind(Address.fromString(BRIDGE))
+  let threshold = BI_0
 
-  return array.filter((item, index, array) => array.indexOf(item) === index)
+  let result = contract.try__relayerThreshold()
+  if (!result.reverted) {
+    threshold = result.value
+  }
+
+  return threshold
 }

@@ -21,7 +21,7 @@ import {
 } from '../../generated/schema' // entities
 import { CHAIN_ID, SUBGRAPH_VERSION } from './config'
 import { updateDailyStatistic } from './dailyStatistics'
-import { BI_0, BI_1, BI_MINUS_1, concatFiltered } from './helpers'
+import { BI_0, BI_1, BI_MINUS_1, getRelayerThreshold } from './helpers'
 
 export function handleDeposit(event: Deposit): void {
   let timestamp = event.block.timestamp
@@ -244,7 +244,7 @@ export function handleRelayerAdded(event: RelayerAdded): void {
   relayer.removedTimestamp = BI_0
   relayer.removedBlockNumber = BI_0
   relayer.voteCount = BI_0
-  relayer.threshold = BI_0
+  relayer.threshold = getRelayerThreshold()
   relayer.timestamp = timestamp
   relayer.blockNumber = blockNumber
   relayer.save()
@@ -273,8 +273,15 @@ export function handleRelayerRemoved(event: RelayerRemoved): void {
   }
   general.save()
 
-  // update Relayer entity
-  let relayer = Relayer.load(event.params.relayer.toHex()) as Relayer
+  // update Relayer entity, create one in the unlikely case that the entity doesn't exist
+  let relayer = Relayer.load(event.params.relayer.toHex()) as Relayer | null
+  if (!relayer) {
+    relayer = new Relayer(event.params.relayer.toHex())
+    relayer.addedTimestamp = BI_0
+    relayer.addedBlockNumber = BI_0
+    relayer.voteCount = BI_0
+    relayer.threshold = getRelayerThreshold()
+  }
   relayer.removedTimestamp = timestamp
   relayer.removedBlockNumber = blockNumber
   relayer.timestamp = timestamp
