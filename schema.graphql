@@ -1,0 +1,143 @@
+# Tracks general Moonbase Bridge data
+type General @entity {
+
+  id: ID! # '1'
+
+  relayersCount: BigInt
+  totalProposalsCount: BigInt
+  votesCount: BigInt
+  totalDepositsCount: BigInt
+  chainId: Int!
+  subgraphVersion: String!
+}
+
+# Dynamically tracks data for each relayer
+type Relayer @entity {
+
+  id: ID! # relayer address
+
+  addedTimestamp: BigInt!
+  addedBlockNumber: BigInt!
+  removedTimestamp: BigInt
+  removedBlockNumber: BigInt
+  votes: [Vote!] @derivedFrom(field: "relayer")
+  voteCount: BigInt!
+  threshold: BigInt
+  createdProposals: [Proposal!] @derivedFrom(field: "createdBy")
+  passedProposals: [Proposal!] @derivedFrom(field: "passedBy")
+  executedProposals: [Proposal!] @derivedFrom(field: "executedBy")
+  canceledProposals: [Proposal!] @derivedFrom(field: "canceledBy")
+
+  # last updated
+  blockNumber: BigInt!
+  timestamp: BigInt!
+}
+
+# Tracks each Deposit, we don't name this entity `Deposit` as entity names should not be identical
+# to event names as good coding practice and to avoid confusion.
+type UserDeposit @entity {
+
+  id: ID! # originChainID => destinationChainID - nonce
+
+  originChainId: Int!
+  destinationChainId: Int!
+  resourceId: Bytes!
+  nonce: BigInt!
+  proposal: Proposal
+
+  createdTimestamp: BigInt!
+  createdBlockNumber: BigInt!
+}
+
+# Dynamically tracks Proposals
+type Proposal @entity {
+
+  id: ID! # originChainID => destinationChainID - nonce
+
+  deposit: UserDeposit! @derivedFrom(field: "proposal")
+  originChainId: Int!
+  destinationChainId: Int!
+  resourceId: Bytes!
+  status: String!
+  dataHash: Bytes!
+  createdBy: Relayer
+  passedBy: Relayer
+  executedBy: Relayer
+  canceledBy: Relayer
+  votes: [Vote!] @derivedFrom(field: "proposal")
+
+  createdTimestamp: BigInt!
+  createdBlockNumber: BigInt!
+  passedTimestamp: BigInt
+  passedBlockNumber: BigInt
+  executedTimestamp: BigInt
+  executedBlockNumber: BigInt
+  canceledTimestamp: BigInt
+  canceledBlockNumber: BigInt
+}
+
+# Dynamically tracks how many Proposals occured for each direction of the bridge
+type ProposalCount @entity {
+
+  id: ID! # originChainId => destinationChainId
+
+  originChainId: Int!
+  destinationChainId: Int!
+  count: BigInt!
+
+  # last updated
+  blockNumber: BigInt!
+  timestamp: BigInt!
+}
+
+
+# Tracks each vote
+type Vote @entity {
+
+  id: ID! # proposal ID - relayer address voting
+
+  relayer: Relayer!
+  proposal: Proposal!
+  approved: Boolean! # the occurance of a `ProposalVote` event indicates that the vote is `true`
+
+  votedTimestamp: BigInt!
+  votedBlockNumber: BigInt!
+}
+
+# Tracks each user and their roles
+type User @entity {
+
+  id: ID! # wallet address
+
+  roles: [Role!] @derivedFrom(field: "user")
+
+  createdTimestamp: BigInt!
+  createdBlockNumber: BigInt!
+}
+
+# Tracks role related data
+type Role @entity {
+
+  id: ID! # role hash - wallet address
+
+  user: User!
+  role: Bytes!
+  sender: Bytes!
+  currentlyHeld: Boolean!
+
+  # last updated
+  blockNumber: BigInt!
+  timestamp: BigInt!
+}
+
+# Tracks daily data for the Bridge
+type DailyStatistic @entity {
+
+  id: ID!
+  date: Int!
+
+  depositsCount: BigInt
+  proposalsCount: BigInt
+  votesCount: BigInt
+  relayersCount: BigInt
+}

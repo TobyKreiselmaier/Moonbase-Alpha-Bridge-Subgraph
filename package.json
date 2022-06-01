@@ -1,0 +1,46 @@
+{
+  "name": "moonbase-alpha-bridge-subgraph",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Subgraph for indexing Moonbase Alpha Bridge data",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com/TobyKreiselmaier/Moonbase-Alpha-Bridge-Subgraph.git"
+  },
+  "bugs": "https://github.com/TobyKreiselmaier/Moonbase-Alpha-Bridge-Subgraph.git/-/issues",
+  "author": "Toby Kreiselmaier <the.rainmaker@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "lint": "prettier --write .",
+    "codegen": "rm -rf generated && graph codegen",
+    "build": "rm -rf build && graph build",
+    "test": "yarn && yarn codegen && graph test",
+    "create": "dotenv -e .env -- cross-var graph create --node %GRAPH_NODE_URL%/deploy/ %SUBGRAPH_NAME%",
+    "deploy": "dotenv -e .env -- cross-var graph deploy --node %GRAPH_NODE_URL%/deploy/ --ipfs %IPFS_NODE_URL% %SUBGRAPH_NAME%",
+    "doall": "yarn && yarn codegen && yarn build && yarn run create && yarn run deploy",
+    "remove": "dotenv -e .env -- cross-var graph remove --debug --ipfs %IPFS_NODE_URL% --node %GRAPH_NODE_URL% %SUBGRAPH_NAME%",
+    "watch": "dotenv -e .env -- cross-var graph deploy --watch --debug --node %GRAPH_NODE_URL% --ipfs %IPFS_NODE_URL% %SUBGRAPH_NAME%",
+    "create-local": "dotenv -e .env.local -- cross-var graph create --node %GRAPH_NODE_URL% %SUBGRAPH_NAME%",
+    "deploy-local": "dotenv -e .env.local -- cross-var graph deploy --debug --ipfs %IPFS_NODE_URL% --node %GRAPH_NODE_URL% %SUBGRAPH_NAME%",
+    "remove-local": "dotenv -e .env.local -- cross-var graph remove --debug --ipfs %IPFS_NODE_URL% --node %GRAPH_NODE_URL% %SUBGRAPH_NAME%",
+    "watch-local": "dotenv -e .env.local -- cross-var graph deploy --watch --debug --node %GRAPH_NODE_URL% --ipfs %IPFS_NODE_URL% %SUBGRAPH_NAME%",
+    "doall-local": "yarn && yarn codegen && yarn build && yarn create-local && yarn deploy-local"
+  },
+  "devDependencies": {
+    "@graphprotocol/graph-cli": "0.30.2",
+    "@graphprotocol/graph-ts": "0.27.0",
+    "@typescript-eslint/eslint-plugin": "5.27.0",
+    "@typescript-eslint/parser": "5.27.0",
+    "cross-var": "1.1.0",
+    "dotenv-cli": "5.1.0",
+    "eslint": "8.16.0",
+    "eslint-config-prettier": "8.5.0",
+    "matchstick-as": "0.5.0",
+    "prettier": "2.6.2",
+    "typescript": "4.7.2"
+  },
+  "engines": {
+    "node": ">=16",
+    "yarn": ">=1.22"
+  }
+}

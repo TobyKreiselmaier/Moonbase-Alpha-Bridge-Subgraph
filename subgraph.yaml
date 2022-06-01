@@ -1,0 +1,48 @@
+specVersion: 0.0.4
+description: The Moonbase Alpha Bridge subgraph indexes all activity related to GMI Farming on Rinkeby
+repository: https://github.com/TobyKreiselmaier/Moonbase-Alpha-Bridge-Subgraph
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: Bridge
+    network: testnet
+    source:
+      address: '0x638285e837db7124ff0947251c6f20ceeb2645df' # MoonbeamBridge on Rinkeby
+      abi: Bridge
+      startBlock: 8660132 # contract creation
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - General
+        - Proposal
+        - ProposalCount
+        - Relayer
+        - UserDeposit
+        - User
+        - Vote
+      abis:
+        - name: Bridge
+          file: ./abis/Bridge.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+      eventHandlers:
+        - event: Deposit(indexed uint8,indexed bytes32,indexed uint64) # signature: 0xdbb69440df8433824a026ef190652f29929eb64b4d1d5d2a69be8afe3e6eaed8
+          handler: handleDeposit
+        - event: ProposalEvent(indexed uint8,indexed uint64,indexed uint8,bytes32,bytes32) # signature: 0x803c5a12f6bde629cea32e63d4b92d1b560816a6fb72e939d3c89e1cab650417
+          handler: handleProposalEvent
+        - event: ProposalVote(indexed uint8,indexed uint64,indexed uint8,bytes32) # signature: 0x25f8daaa4635a7729927ba3f5b3d59cc3320aca7c32c9db4e7ca7b9574343640
+          handler: handleProposalVote
+        - event: RelayerAdded(indexed address) # signature: 0x03580ee9f53a62b7cb409a2cb56f9be87747dd15017afc5cef6eef321e4fb2c5
+          handler: handleRelayerAdded
+        - event: RelayerRemoved(indexed address) # signature: 0x10e1f7ce9fd7d1b90a66d13a2ab3cb8dd7f29f3f8d520b143b063ccfbab6906b
+          handler: handleRelayerRemoved
+        - event: RelayerThresholdChanged(indexed uint256) # signature: 0xa20d6b84cd798a24038be305eff8a45ca82ef54a2aa2082005d8e14c0a4746c8
+          handler: handleRelayerThresholdChanged
+        - event: RoleGranted(indexed bytes32,indexed address,indexed address) # signature: 0x2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d
+          handler: handleRoleGranted
+        - event: RoleRevoked(indexed bytes32,indexed address,indexed address) # signature: 0xf6391f5c32d9c69d2a47ea670b442974b53935d1edc7fd64eb21e047a839171b
+          handler: handleRoleRevoked
+      file: ./src/mappings/core.ts
