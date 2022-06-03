@@ -1,5 +1,13 @@
-import { Address, BigInt, Bytes } from '@graphprotocol/graph-ts'
-import { afterEach, assert, clearStore, describe, newMockEvent, test } from 'matchstick-as'
+import { Address, BigInt, Bytes, ethereum } from '@graphprotocol/graph-ts'
+import {
+  afterEach,
+  assert,
+  clearStore,
+  createMockedFunction,
+  describe,
+  newMockEvent,
+  test
+} from 'matchstick-as'
 import {
   DailyStatistic,
   General,
@@ -21,7 +29,7 @@ import {
   RoleGranted,
   RoleRevoked
 } from '../generated/Bridge/Bridge' // events
-import { CHAIN_ID, RELAYER_ROLE, SUBGRAPH_VERSION } from '../src/mappings/config'
+import { BRIDGE, CHAIN_ID, RELAYER_ROLE, SUBGRAPH_VERSION } from '../src/mappings/config'
 import {
   ADDRESS_1,
   ADDRESS_2,
@@ -484,23 +492,36 @@ describe('handleProposalVote()', () => {
       assert.fieldEquals('General', '1', 'subgraphVersion', SUBGRAPH_VERSION.toString())
     })
 
-    // test can currently not be run this way as matchstick is not passing an event.transaction.from field.
-    // TODO: Implement later
-    // test('an entity created through a test event has correct fields', () => {
-    // // create a test General entity via a test event
-    // let testEvent = createProposalVoteEvent(4, BigInt.fromI32(156), 3, new Bytes(1500))
+    test('an entity created through a test event has correct fields', () => {
+      // create a mock Relayer entity needed for this handler
+      let relayer = new Relayer(ADDRESS_1)
+      relayer.addedTimestamp = TIMESTAMP
+      relayer.addedBlockNumber = BLOCK_NUMBER
+      relayer.removedTimestamp = BI_0
+      relayer.removedBlockNumber = BI_0
+      relayer.voteCount = BI_0
+      relayer.threshold = BI_1
+      relayer.timestamp = TIMESTAMP
+      relayer.blockNumber = BLOCK_NUMBER
+      relayer.save()
 
-    // handleNewProposalVoteEvents([testEvent])
+      // create a test General entity via a test event
+      let testEvent = createProposalVoteEvent(4, BigInt.fromI32(156), 3, new Bytes(1500))
 
-    // check values for test entity created via test event and the Deposit event handler
-    // assert.fieldEquals('General', '1', 'id', '1')
-    // assert.fieldEquals('General', '1', 'totalDepositsCount', BI_0.toString())
-    // assert.fieldEquals('General', '1', 'totalProposalsCount', BI_0.toString())
-    // assert.fieldEquals('General', '1', 'totalVotesCount', BI_1.toString())
-    // assert.fieldEquals('General', '1', 'totalRelayersCount', BI_0.toString())
-    // assert.fieldEquals('General', '1', 'chainId', CHAIN_ID.toString())
-    // assert.fieldEquals('General', '1', 'subgraphVersion', SUBGRAPH_VERSION.toString())
-    // })
+      // set the mock relayer as the tx sender
+      testEvent.transaction.from = Address.fromString(ADDRESS_1)
+
+      handleNewProposalVoteEvents([testEvent])
+
+      // check values for test entity created via test event and the Deposit event handler
+      assert.fieldEquals('General', '1', 'id', '1')
+      assert.fieldEquals('General', '1', 'totalDepositsCount', BI_0.toString())
+      assert.fieldEquals('General', '1', 'totalProposalsCount', BI_0.toString())
+      assert.fieldEquals('General', '1', 'totalVotesCount', BI_1.toString())
+      assert.fieldEquals('General', '1', 'totalRelayersCount', BI_0.toString())
+      assert.fieldEquals('General', '1', 'chainId', CHAIN_ID.toString())
+      assert.fieldEquals('General', '1', 'subgraphVersion', SUBGRAPH_VERSION.toString())
+    })
   })
 
   describe('Vote entity', () => {
@@ -523,22 +544,65 @@ describe('handleProposalVote()', () => {
       assert.fieldEquals('Vote', 'Test', 'votedBlockNumber', BLOCK_NUMBER.toString())
     })
 
-    // test can currently not be run this way as matchstick is not passing an event.transaction.from field.
-    // TODO: Implement later
-    // test('an entity created through a test event has correct fields', () => {
-    //   // create a test Vote entity via a test event
-    //   let testEvent = createProposalVoteEvent(42, BigInt.fromI32(156), 3, new Bytes(1500))
+    test('an entity created through a test event has correct fields', () => {
+      // create a mock Relayer entity needed for this handler
+      let relayer = new Relayer(ADDRESS_1)
+      relayer.addedTimestamp = TIMESTAMP
+      relayer.addedBlockNumber = BLOCK_NUMBER
+      relayer.removedTimestamp = BI_0
+      relayer.removedBlockNumber = BI_0
+      relayer.voteCount = BI_0
+      relayer.threshold = BI_1
+      relayer.timestamp = TIMESTAMP
+      relayer.blockNumber = BLOCK_NUMBER
+      relayer.save()
 
-    //   handleNewProposalVoteEvents([testEvent])
+      // create a test General entity via a test event
+      let testEvent = createProposalVoteEvent(7, BigInt.fromI32(156), 3, new Bytes(1500))
 
-    //   // check values for test entity created via test event and the Deposit event handler
-    //   assert.fieldEquals('Vote', '42=>4', 'id', '42=>4')
-    //   assert.fieldEquals('Vote', '42=>4', 'relayer', ADDRESS_1)
-    //   assert.fieldEquals('Vote', '42=>4', 'proposal', '42=>4-156')
-    //   assert.fieldEquals('Vote', '42=>4', 'approved', 'true')
-    //   assert.fieldEquals('Vote', '42=>4', 'votedTimestamp', '1')
-    //   assert.fieldEquals('Vote', '42=>4', 'votedBlockNumber', '1')
-    // })
+      // set the mock relayer as the tx sender
+      testEvent.transaction.from = Address.fromString(ADDRESS_1)
+
+      handleNewProposalVoteEvents([testEvent])
+
+      // check values for test entity created via test event and the Deposit event handler
+      assert.fieldEquals(
+        'Vote',
+        '7=>4-156-0x8c47e52a34dd3e5d538d42112c0c0029676921f1',
+        'id',
+        '7=>4-156-0x8c47e52a34dd3e5d538d42112c0c0029676921f1'
+      )
+      assert.fieldEquals(
+        'Vote',
+        '7=>4-156-0x8c47e52a34dd3e5d538d42112c0c0029676921f1',
+        'relayer',
+        ADDRESS_1
+      )
+      assert.fieldEquals(
+        'Vote',
+        '7=>4-156-0x8c47e52a34dd3e5d538d42112c0c0029676921f1',
+        'proposal',
+        '7=>4-156'
+      )
+      assert.fieldEquals(
+        'Vote',
+        '7=>4-156-0x8c47e52a34dd3e5d538d42112c0c0029676921f1',
+        'approved',
+        'true'
+      )
+      assert.fieldEquals(
+        'Vote',
+        '7=>4-156-0x8c47e52a34dd3e5d538d42112c0c0029676921f1',
+        'votedTimestamp',
+        '1'
+      )
+      assert.fieldEquals(
+        'Vote',
+        '7=>4-156-0x8c47e52a34dd3e5d538d42112c0c0029676921f1',
+        'votedBlockNumber',
+        '1'
+      )
+    })
   })
 
   describe('DailyStatistic entity', () => {
@@ -561,27 +625,35 @@ describe('handleProposalVote()', () => {
       assert.fieldEquals('DailyStatistic', 'Test', 'relayersCount', BI_0.toString())
     })
 
-    // test can currently not be run this way as matchstick is not passing an event.transaction.from field.
-    // TODO: Implement later
-    // test('an entity created through a test event has correct fields', () => {
-    //   // create a test DailyStatistic entity via a test event
-    //   let testEvent = createProposalVoteEvent(
-    //     42,
-    //     BigInt.fromI32(156),
-    //     3,
-    //     new Bytes(1500)
-    //   )
+    test('an entity created through a test event has correct fields', () => {
+      // create a mock Relayer entity needed for this handler
+      let relayer = new Relayer(ADDRESS_1)
+      relayer.addedTimestamp = TIMESTAMP
+      relayer.addedBlockNumber = BLOCK_NUMBER
+      relayer.removedTimestamp = BI_0
+      relayer.removedBlockNumber = BI_0
+      relayer.voteCount = BI_0
+      relayer.threshold = BI_1
+      relayer.timestamp = TIMESTAMP
+      relayer.blockNumber = BLOCK_NUMBER
+      relayer.save()
 
-    //   handleNewProposalVoteEvents([testEvent])
+      // create a test General entity via a test event
+      let testEvent = createProposalVoteEvent(7, BigInt.fromI32(156), 3, new Bytes(1500))
 
-    //   // check values for test entity created via test event and the Deposit event handler
-    //   assert.fieldEquals('DailyStatistic', '0', 'id', '0')
-    //   assert.fieldEquals('DailyStatistic', '0', 'date', '0')
-    //   assert.fieldEquals('DailyStatistic', '0', 'depositsCount', '0')
-    //   assert.fieldEquals('DailyStatistic', '0', 'proposalsCount', '0')
-    //   assert.fieldEquals('DailyStatistic', '0', 'votesCount', '1')
-    //   assert.fieldEquals('DailyStatistic', '0', 'relayersCount', '0')
-    // })
+      // set the mock relayer as the tx sender
+      testEvent.transaction.from = Address.fromString(ADDRESS_1)
+
+      handleNewProposalVoteEvents([testEvent])
+
+      // check values for test entity created via test event and the Deposit event handler
+      assert.fieldEquals('DailyStatistic', '0', 'id', '0')
+      assert.fieldEquals('DailyStatistic', '0', 'date', '0')
+      assert.fieldEquals('DailyStatistic', '0', 'depositsCount', '0')
+      assert.fieldEquals('DailyStatistic', '0', 'proposalsCount', '0')
+      assert.fieldEquals('DailyStatistic', '0', 'votesCount', '1')
+      assert.fieldEquals('DailyStatistic', '0', 'relayersCount', '0')
+    })
   })
 
   afterEach(() => {
@@ -613,23 +685,30 @@ describe('handleRelayerAdded()', () => {
       assert.fieldEquals('General', '1', 'subgraphVersion', SUBGRAPH_VERSION.toString())
     })
 
-    // test can currently not run in this way as the handler is making and RPC call to the bridge conrtact
-    // that can not yet be simulated. TODO: Implement later
-    // test('an entity created through a test event has correct fields', () => {
-    //   // create a test General entity via a test event
-    //   let testEvent = createRelayerAddedEvent(Address.fromString(ADDRESS_1))
+    test('an entity created through a test event has correct fields', () => {
+      // create a mock function for the proper execution of the handler
+      createMockedFunction(
+        Address.fromString(BRIDGE),
+        '_relayerThreshold',
+        '_relayerThreshold():(uint256)'
+      )
+        .withArgs([])
+        .returns([ethereum.Value.fromUnsignedBigInt(BI_1)])
 
-    //   handleNewRelayerAddedEvents([testEvent])
+      // create a test General entity via a test event
+      let testEvent = createRelayerAddedEvent(Address.fromString(ADDRESS_1))
 
-    //   // check values for test entity created via test event and the Deposit event handler
-    //   assert.fieldEquals('General', '1', 'id', '1')
-    //   assert.fieldEquals('General', '1', 'totalDepositsCount', BI_0.toString())
-    //   assert.fieldEquals('General', '1', 'totalProposalsCount', BI_0.toString())
-    //   assert.fieldEquals('General', '1', 'totalVotesCount', BI_0.toString())
-    //   assert.fieldEquals('General', '1', 'totalRelayersCount', BI_1.toString())
-    //   assert.fieldEquals('General', '1', 'chainId', CHAIN_ID.toString())
-    //   assert.fieldEquals('General', '1', 'subgraphVersion', SUBGRAPH_VERSION.toString())
-    // })
+      handleNewRelayerAddedEvents([testEvent])
+
+      // check values for test entity created via test event and the Deposit event handler
+      assert.fieldEquals('General', '1', 'id', '1')
+      assert.fieldEquals('General', '1', 'totalDepositsCount', BI_0.toString())
+      assert.fieldEquals('General', '1', 'totalProposalsCount', BI_0.toString())
+      assert.fieldEquals('General', '1', 'totalVotesCount', BI_0.toString())
+      assert.fieldEquals('General', '1', 'totalRelayersCount', BI_1.toString())
+      assert.fieldEquals('General', '1', 'chainId', CHAIN_ID.toString())
+      assert.fieldEquals('General', '1', 'subgraphVersion', SUBGRAPH_VERSION.toString())
+    })
   })
 
   describe('Relayer entity', () => {
@@ -658,25 +737,32 @@ describe('handleRelayerAdded()', () => {
       assert.fieldEquals('Relayer', 'Test', 'blockNumber', BLOCK_NUMBER.toString())
     })
 
-    // test can currently not run in this way as the handler is making and RPC call to the bridge conrtact
-    // that can not yet be simulated. TODO: Implement later
-    // test('an entity created through a test event has correct fields', () => {
-    //   // create a test Vote entity via a test event
-    //   let testEvent = createRelayerAddedEvent(Address.fromString(ADDRESS_1))
+    test('an entity created through a test event has correct fields', () => {
+      // create a mock function for the proper execution of the handler
+      createMockedFunction(
+        Address.fromString(BRIDGE),
+        '_relayerThreshold',
+        '_relayerThreshold():(uint256)'
+      )
+        .withArgs([])
+        .returns([ethereum.Value.fromUnsignedBigInt(BI_1)])
 
-    //   handleNewRelayerAddedEvents([testEvent])
+      // create a test Vote entity via a test event
+      let testEvent = createRelayerAddedEvent(Address.fromString(ADDRESS_1))
 
-    //   // check values for test entity created via test event and the Deposit event handler
-    // assert.fieldEquals('Relayer', 'Test', 'id', 'Test')
-    // assert.fieldEquals('Relayer', 'Test', 'addedTimestamp', TIMESTAMP.toString())
-    // assert.fieldEquals('Relayer', 'Test', 'addedBlockNumber', BLOCK_NUMBER.toString())
-    // assert.fieldEquals('Relayer', 'Test', 'removedTimestamp', BI_0.toString())
-    // assert.fieldEquals('Relayer', 'Test', 'removedBlockNumber', BI_0.toString())
-    // assert.fieldEquals('Relayer', 'Test', 'voteCount', BI_0.toString())
-    // assert.fieldEquals('Relayer', 'Test', 'threshold', BI_1.toString())
-    // assert.fieldEquals('Relayer', 'Test', 'timestamp', TIMESTAMP.toString())
-    // assert.fieldEquals('Relayer', 'Test', 'blockNumber', BLOCK_NUMBER.toString())
-    // })
+      handleNewRelayerAddedEvents([testEvent])
+
+      // check values for test entity created via test event and the Deposit event handler
+      assert.fieldEquals('Relayer', ADDRESS_1, 'id', ADDRESS_1)
+      assert.fieldEquals('Relayer', ADDRESS_1, 'addedTimestamp', BI_1.toString())
+      assert.fieldEquals('Relayer', ADDRESS_1, 'addedBlockNumber', BI_1.toString())
+      assert.fieldEquals('Relayer', ADDRESS_1, 'removedTimestamp', BI_0.toString())
+      assert.fieldEquals('Relayer', ADDRESS_1, 'removedBlockNumber', BI_0.toString())
+      assert.fieldEquals('Relayer', ADDRESS_1, 'voteCount', BI_0.toString())
+      assert.fieldEquals('Relayer', ADDRESS_1, 'threshold', BI_1.toString())
+      assert.fieldEquals('Relayer', ADDRESS_1, 'timestamp', BI_1.toString())
+      assert.fieldEquals('Relayer', ADDRESS_1, 'blockNumber', BI_1.toString())
+    })
   })
 
   describe('DailyStatistic entity', () => {
@@ -699,22 +785,29 @@ describe('handleRelayerAdded()', () => {
       assert.fieldEquals('DailyStatistic', 'Test', 'relayersCount', BI_1.toString())
     })
 
-    // test can currently not run in this way as the handler is making and RPC call to the bridge conrtact
-    // that can not yet be simulated. TODO: Implement later
-    // test('an entity created through a test event has correct fields', () => {
-    //   // create a test DailyStatistic entity via a test event
-    //   let testEvent = createRelayerAddedEvent(Address.fromString(ADDRESS_1))
+    test('an entity created through a test event has correct fields', () => {
+      // create a mock function for the proper execution of the handler
+      createMockedFunction(
+        Address.fromString(BRIDGE),
+        '_relayerThreshold',
+        '_relayerThreshold():(uint256)'
+      )
+        .withArgs([])
+        .returns([ethereum.Value.fromUnsignedBigInt(BI_1)])
 
-    //   handleNewRelayerAddedEvents([testEvent])
+      // create a test DailyStatistic entity via a test event
+      let testEvent = createRelayerAddedEvent(Address.fromString(ADDRESS_1))
 
-    //   // check values for test entity created via test event and the Deposit event handler
-    //   assert.fieldEquals('DailyStatistic', '0', 'id', '0')
-    //   assert.fieldEquals('DailyStatistic', '0', 'date', '0')
-    //   assert.fieldEquals('DailyStatistic', '0', 'depositsCount', '0')
-    //   assert.fieldEquals('DailyStatistic', '0', 'proposalsCount', '0')
-    //   assert.fieldEquals('DailyStatistic', '0', 'votesCount', '1')
-    //   assert.fieldEquals('DailyStatistic', '0', 'relayersCount', '0')
-    // })
+      handleNewRelayerAddedEvents([testEvent])
+
+      // check values for test entity created via test event and the Deposit event handler
+      assert.fieldEquals('DailyStatistic', '0', 'id', '0')
+      assert.fieldEquals('DailyStatistic', '0', 'date', '0')
+      assert.fieldEquals('DailyStatistic', '0', 'depositsCount', '0')
+      assert.fieldEquals('DailyStatistic', '0', 'proposalsCount', '0')
+      assert.fieldEquals('DailyStatistic', '0', 'votesCount', '0')
+      assert.fieldEquals('DailyStatistic', '0', 'relayersCount', '1')
+    })
   })
 
   afterEach(() => {
@@ -746,23 +839,30 @@ describe('handleRelayerRemoved()', () => {
       assert.fieldEquals('General', '1', 'subgraphVersion', SUBGRAPH_VERSION.toString())
     })
 
-    // test can currently not run in this way as the handler is making and RPC call to the bridge conrtact
-    // that can not yet be simulated. TODO: Implement later
-    // test('an entity created through a test event has correct fields', () => {
-    //   // create a test General entity via a test event
-    //   let testEvent = createRelayerRemovedEvent(Address.fromString(ADDRESS_1))
+    test('an entity created through a test event has correct fields', () => {
+      // create a mock function for the proper execution of the handler
+      createMockedFunction(
+        Address.fromString(BRIDGE),
+        '_relayerThreshold',
+        '_relayerThreshold():(uint256)'
+      )
+        .withArgs([])
+        .returns([ethereum.Value.fromUnsignedBigInt(BI_1)])
 
-    //   handleNewRelayerRemovedEvents([testEvent])
+      // create a test General entity via a test event
+      let testEvent = createRelayerRemovedEvent(Address.fromString(ADDRESS_1))
 
-    //   // check values for test entity created via test event and the Deposit event handler
-    //   assert.fieldEquals('General', '1', 'id', '1')
-    //   assert.fieldEquals('General', '1', 'totalDepositsCount', BI_0.toString())
-    //   assert.fieldEquals('General', '1', 'totalProposalsCount', BI_0.toString())
-    //   assert.fieldEquals('General', '1', 'totalVotesCount', BI_0.toString())
-    //   assert.fieldEquals('General', '1', 'totalRelayersCount', BI_1.toString())
-    //   assert.fieldEquals('General', '1', 'chainId', CHAIN_ID.toString())
-    //   assert.fieldEquals('General', '1', 'subgraphVersion', SUBGRAPH_VERSION.toString())
-    // })
+      handleNewRelayerRemovedEvents([testEvent])
+
+      // check values for test entity created via test event and the Deposit event handler
+      assert.fieldEquals('General', '1', 'id', '1')
+      assert.fieldEquals('General', '1', 'totalDepositsCount', BI_0.toString())
+      assert.fieldEquals('General', '1', 'totalProposalsCount', BI_0.toString())
+      assert.fieldEquals('General', '1', 'totalVotesCount', BI_0.toString())
+      assert.fieldEquals('General', '1', 'totalRelayersCount', BI_0.toString())
+      assert.fieldEquals('General', '1', 'chainId', CHAIN_ID.toString())
+      assert.fieldEquals('General', '1', 'subgraphVersion', SUBGRAPH_VERSION.toString())
+    })
   })
 
   describe('Relayer entity', () => {
@@ -801,25 +901,44 @@ describe('handleRelayerRemoved()', () => {
       assert.fieldEquals('Relayer', 'Test', 'blockNumber', BigInt.fromI32(8660410).toString())
     })
 
-    // test can currently not run in this way as the handler is making and RPC call to the bridge conrtact
-    // that can not yet be simulated. TODO: Implement later
-    // test('an entity created through a test event has correct fields', () => {
-    //   // create a test Vote entity via a test event
-    //   let testEvent = createRelayerRemovedEvent(Address.fromString(ADDRESS_1))
+    test('an entity created through a test event has correct fields', () => {
+      // Initialize a test Relayer entity
+      let relayer = new Relayer(ADDRESS_1)
+      relayer.addedTimestamp = TIMESTAMP
+      relayer.addedBlockNumber = BLOCK_NUMBER
+      relayer.removedTimestamp = BI_0
+      relayer.removedBlockNumber = BI_0
+      relayer.voteCount = BI_0
+      relayer.threshold = BI_1
+      relayer.timestamp = TIMESTAMP
+      relayer.blockNumber = BLOCK_NUMBER
+      relayer.save()
 
-    //   handleNewRelayerRemovedEvents([testEvent])
+      // create a mock function for the proper execution of the handler
+      createMockedFunction(
+        Address.fromString(BRIDGE),
+        '_relayerThreshold',
+        '_relayerThreshold():(uint256)'
+      )
+        .withArgs([])
+        .returns([ethereum.Value.fromUnsignedBigInt(BI_1)])
 
-    //   // check values for test entity created via test event and the Deposit event handler
-    // assert.fieldEquals('Relayer', 'Test', 'id', 'Test')
-    // assert.fieldEquals('Relayer', 'Test', 'addedTimestamp', TIMESTAMP.toString())
-    // assert.fieldEquals('Relayer', 'Test', 'addedBlockNumber', BLOCK_NUMBER.toString())
-    // assert.fieldEquals('Relayer', 'Test', 'removedTimestamp', BigInt.fromI32(1622140484).toString())
-    // assert.fieldEquals('Relayer', 'Test', 'removedBlockNumber', BigInt.fromI32(8660410).toString())
-    // assert.fieldEquals('Relayer', 'Test', 'voteCount', BI_0.toString())
-    // assert.fieldEquals('Relayer', 'Test', 'threshold', BI_1.toString())
-    // assert.fieldEquals('Relayer', 'Test', 'timestamp', BigInt.fromI32(1622140484).toString())
-    // assert.fieldEquals('Relayer', 'Test', 'blockNumber', BigInt.fromI32(8660410).toString())
-    // })
+      // create a test Vote entity via a test event
+      let testEvent = createRelayerRemovedEvent(Address.fromString(ADDRESS_1))
+
+      handleNewRelayerRemovedEvents([testEvent])
+
+      // check values for test entity created via test event and the Deposit event handler
+      assert.fieldEquals('Relayer', ADDRESS_1, 'id', ADDRESS_1)
+      assert.fieldEquals('Relayer', ADDRESS_1, 'addedTimestamp', TIMESTAMP.toString())
+      assert.fieldEquals('Relayer', ADDRESS_1, 'addedBlockNumber', BLOCK_NUMBER.toString())
+      assert.fieldEquals('Relayer', ADDRESS_1, 'removedTimestamp', BI_1.toString())
+      assert.fieldEquals('Relayer', ADDRESS_1, 'removedBlockNumber', BI_1.toString())
+      assert.fieldEquals('Relayer', ADDRESS_1, 'voteCount', BI_0.toString())
+      assert.fieldEquals('Relayer', ADDRESS_1, 'threshold', BI_1.toString())
+      assert.fieldEquals('Relayer', ADDRESS_1, 'timestamp', BI_1.toString())
+      assert.fieldEquals('Relayer', ADDRESS_1, 'blockNumber', BI_1.toString())
+    })
   })
 
   describe('DailyStatistic entity', () => {
@@ -842,22 +961,29 @@ describe('handleRelayerRemoved()', () => {
       assert.fieldEquals('DailyStatistic', 'Test', 'relayersCount', BI_1.toString())
     })
 
-    // test can currently not run in this way as the handler is making and RPC call to the bridge conrtact
-    // that can not yet be simulated. TODO: Implement later
-    // test('an entity created through a test event has correct fields', () => {
-    //   // create a test DailyStatistic entity via a test event
-    //   let testEvent = createRelayerRemovedEvent(Address.fromString(ADDRESS_1))
+    test('an entity created through a test event has correct fields', () => {
+      // create a mock function for the proper execution of the handler
+      createMockedFunction(
+        Address.fromString(BRIDGE),
+        '_relayerThreshold',
+        '_relayerThreshold():(uint256)'
+      )
+        .withArgs([])
+        .returns([ethereum.Value.fromUnsignedBigInt(BI_1)])
 
-    //   handleNewRelayerRemovedEvents([testEvent])
+      // create a test DailyStatistic entity via a test event
+      let testEvent = createRelayerRemovedEvent(Address.fromString(ADDRESS_1))
 
-    //   // check values for test entity created via test event and the Deposit event handler
-    //   assert.fieldEquals('DailyStatistic', '0', 'id', '0')
-    //   assert.fieldEquals('DailyStatistic', '0', 'date', '0')
-    //   assert.fieldEquals('DailyStatistic', '0', 'depositsCount', '0')
-    //   assert.fieldEquals('DailyStatistic', '0', 'proposalsCount', '0')
-    //   assert.fieldEquals('DailyStatistic', '0', 'votesCount', '1')
-    //   assert.fieldEquals('DailyStatistic', '0', 'relayersCount', '0')
-    // })
+      handleNewRelayerRemovedEvents([testEvent])
+
+      // check values for test entity created via test event and the Deposit event handler
+      assert.fieldEquals('DailyStatistic', '0', 'id', '0')
+      assert.fieldEquals('DailyStatistic', '0', 'date', '0')
+      assert.fieldEquals('DailyStatistic', '0', 'depositsCount', '0')
+      assert.fieldEquals('DailyStatistic', '0', 'proposalsCount', '0')
+      assert.fieldEquals('DailyStatistic', '0', 'votesCount', '0')
+      assert.fieldEquals('DailyStatistic', '0', 'relayersCount', '-1')
+    })
   })
 
   afterEach(() => {
@@ -893,36 +1019,37 @@ describe('handleRelayerThresholdChanged()', () => {
       assert.fieldEquals('Relayer', 'Test', 'blockNumber', BLOCK_NUMBER.toString())
     })
 
-    // test can currently not be run this way as matchstick is not passing an event.transaction.from field.
-    // TODO: Implement later
-    // test('an entity created through a test event has correct fields', () => {
-    //   // create and update a test Relayer entity via a test event
-    //   let relayer = new Relayer('Test')
-    //   relayer.addedTimestamp = TIMESTAMP
-    //   relayer.addedBlockNumber = BLOCK_NUMBER
-    //   relayer.removedTimestamp = BI_0
-    //   relayer.removedBlockNumber = BI_0
-    //   relayer.voteCount = BI_0
-    //   relayer.threshold = BI_1
-    //   relayer.timestamp = TIMESTAMP
-    //   relayer.blockNumber = BLOCK_NUMBER
-    //   relayer.save()
+    test('an entity created through a test event has correct fields', () => {
+      // create and update a test Relayer entity via a test event
+      let relayer = new Relayer(ADDRESS_1)
+      relayer.addedTimestamp = TIMESTAMP
+      relayer.addedBlockNumber = BLOCK_NUMBER
+      relayer.removedTimestamp = BI_0
+      relayer.removedBlockNumber = BI_0
+      relayer.voteCount = BI_0
+      relayer.threshold = BI_1
+      relayer.timestamp = TIMESTAMP
+      relayer.blockNumber = BLOCK_NUMBER
+      relayer.save()
 
-    //   let testEvent = createRelayerThresholdChangedEvent(BigInt.fromI32(10))
+      let testEvent = createRelayerThresholdChangedEvent(BigInt.fromI32(10))
 
-    //   handleNewRelayerThresholdChangedEvents([testEvent])
+      // set the mock relayer as the tx sender
+      testEvent.transaction.from = Address.fromString(ADDRESS_1)
 
-    //   // check values for test entity created via test event and the Deposit event handler
-    //   assert.fieldEquals('Relayer', 'Test', 'id', 'Test')
-    //   assert.fieldEquals('Relayer', 'Test', 'addedTimestamp', TIMESTAMP.toString())
-    //   assert.fieldEquals('Relayer', 'Test', 'addedBlockNumber', BLOCK_NUMBER.toString())
-    //   assert.fieldEquals('Relayer', 'Test', 'removedTimestamp', BI_0.toString())
-    //   assert.fieldEquals('Relayer', 'Test', 'removedBlockNumber', BI_0.toString())
-    //   assert.fieldEquals('Relayer', 'Test', 'voteCount', BI_0.toString())
-    //   assert.fieldEquals('Relayer', 'Test', 'threshold', BigInt.fromI32(10).toString())
-    //   assert.fieldEquals('Relayer', 'Test', 'timestamp', TIMESTAMP.toString())
-    //   assert.fieldEquals('Relayer', 'Test', 'blockNumber', BLOCK_NUMBER.toString())
-    // })
+      handleNewRelayerThresholdChangedEvents([testEvent])
+
+      // check values for test entity created via test event and the Deposit event handler
+      assert.fieldEquals('Relayer', ADDRESS_1, 'id', ADDRESS_1)
+      assert.fieldEquals('Relayer', ADDRESS_1, 'addedTimestamp', TIMESTAMP.toString())
+      assert.fieldEquals('Relayer', ADDRESS_1, 'addedBlockNumber', BLOCK_NUMBER.toString())
+      assert.fieldEquals('Relayer', ADDRESS_1, 'removedTimestamp', BI_0.toString())
+      assert.fieldEquals('Relayer', ADDRESS_1, 'removedBlockNumber', BI_0.toString())
+      assert.fieldEquals('Relayer', ADDRESS_1, 'voteCount', BI_0.toString())
+      assert.fieldEquals('Relayer', ADDRESS_1, 'threshold', BigInt.fromI32(10).toString())
+      assert.fieldEquals('Relayer', ADDRESS_1, 'timestamp', BI_1.toString())
+      assert.fieldEquals('Relayer', ADDRESS_1, 'blockNumber', BI_1.toString())
+    })
   })
 
   afterEach(() => {

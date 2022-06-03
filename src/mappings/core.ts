@@ -296,6 +296,8 @@ export function handleRelayerThresholdChanged(event: RelayerThresholdChanged): v
   // update Relayer entity
   let relayer = Relayer.load(event.transaction.from.toHex()) as Relayer
   relayer.threshold = event.params.newThreshold
+  relayer.timestamp = event.block.timestamp
+  relayer.blockNumber = event.block.number
   relayer.save()
 }
 
