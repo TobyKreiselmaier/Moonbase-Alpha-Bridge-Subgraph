@@ -39,23 +39,11 @@ export function createDepositEvent(
   depositNonce: BigInt
 ): Deposit {
   let newDepositEvent = changetype<Deposit>(newMockEvent())
-  newDepositEvent.parameters = new Array()
-  let destinationChainIDParam = new ethereum.EventParam(
-    'destinationChainID',
-    ethereum.Value.fromI32(destinationChainID)
-  )
-  let resourceIDParam = new ethereum.EventParam(
-    'resourceID',
-    ethereum.Value.fromFixedBytes(resourceID)
-  )
-  let depositNonceParam = new ethereum.EventParam(
-    'depositNonce',
-    ethereum.Value.fromUnsignedBigInt(depositNonce)
-  )
-
-  newDepositEvent.parameters.push(destinationChainIDParam)
-  newDepositEvent.parameters.push(resourceIDParam)
-  newDepositEvent.parameters.push(depositNonceParam)
+  newDepositEvent.parameters = [
+    new ethereum.EventParam('destinationChainID', ethereum.Value.fromI32(destinationChainID)),
+    new ethereum.EventParam('resourceID', ethereum.Value.fromFixedBytes(resourceID)),
+    new ethereum.EventParam('depositNonce', ethereum.Value.fromUnsignedBigInt(depositNonce))
+  ]
 
   return newDepositEvent
 }
@@ -76,27 +64,13 @@ export function createProposalEventEvent(
   dataHash: Bytes
 ): ProposalEvent {
   let newProposalEventEvent = changetype<ProposalEvent>(newMockEvent())
-  newProposalEventEvent.parameters = new Array()
-  let originChainIDParam = new ethereum.EventParam(
-    'originChainID',
-    ethereum.Value.fromI32(originChainID)
-  )
-  let depositNonceParam = new ethereum.EventParam(
-    'depositNonce',
-    ethereum.Value.fromUnsignedBigInt(depositNonce)
-  )
-  let statusParam = new ethereum.EventParam('status', ethereum.Value.fromI32(status))
-  let resourceIDParam = new ethereum.EventParam(
-    'resourceID',
-    ethereum.Value.fromFixedBytes(resourceID)
-  )
-  let dataHashParam = new ethereum.EventParam('dataHash', ethereum.Value.fromFixedBytes(dataHash))
-
-  newProposalEventEvent.parameters.push(originChainIDParam)
-  newProposalEventEvent.parameters.push(depositNonceParam)
-  newProposalEventEvent.parameters.push(statusParam)
-  newProposalEventEvent.parameters.push(resourceIDParam)
-  newProposalEventEvent.parameters.push(dataHashParam)
+  newProposalEventEvent.parameters = [
+    new ethereum.EventParam('originChainID', ethereum.Value.fromI32(originChainID)),
+    new ethereum.EventParam('depositNonce', ethereum.Value.fromUnsignedBigInt(depositNonce)),
+    new ethereum.EventParam('status', ethereum.Value.fromI32(status)),
+    new ethereum.EventParam('resourceID', ethereum.Value.fromFixedBytes(resourceID)),
+    new ethereum.EventParam('dataHash', ethereum.Value.fromFixedBytes(dataHash))
+  ]
 
   return newProposalEventEvent
 }
@@ -116,25 +90,12 @@ export function createProposalVoteEvent(
   resourceID: Bytes
 ): ProposalVote {
   let newProposalVoteEvent = changetype<ProposalVote>(newMockEvent())
-  newProposalVoteEvent.parameters = new Array()
-  let originChainIDParam = new ethereum.EventParam(
-    'originChainID',
-    ethereum.Value.fromI32(originChainID)
-  )
-  let depositNonceParam = new ethereum.EventParam(
-    'depositNonce',
-    ethereum.Value.fromUnsignedBigInt(depositNonce)
-  )
-  let statusParam = new ethereum.EventParam('status', ethereum.Value.fromI32(status))
-  let resourceIDParam = new ethereum.EventParam(
-    'resourceID',
-    ethereum.Value.fromFixedBytes(resourceID)
-  )
-
-  newProposalVoteEvent.parameters.push(originChainIDParam)
-  newProposalVoteEvent.parameters.push(depositNonceParam)
-  newProposalVoteEvent.parameters.push(statusParam)
-  newProposalVoteEvent.parameters.push(resourceIDParam)
+  newProposalVoteEvent.parameters = [
+    new ethereum.EventParam('originChainID', ethereum.Value.fromI32(originChainID)),
+    new ethereum.EventParam('depositNonce', ethereum.Value.fromUnsignedBigInt(depositNonce)),
+    new ethereum.EventParam('status', ethereum.Value.fromI32(status)),
+    new ethereum.EventParam('resourceID', ethereum.Value.fromFixedBytes(resourceID))
+  ]
 
   return newProposalVoteEvent
 }
@@ -149,10 +110,9 @@ export function handleNewProposalVoteEvents(events: ProposalVote[]): void {
 // used to create a new `RelayerAdded` test event
 export function createRelayerAddedEvent(relayer: Address): RelayerAdded {
   let newRelayerAddedEvent = changetype<RelayerAdded>(newMockEvent())
-  newRelayerAddedEvent.parameters = new Array()
-  let relayerParam = new ethereum.EventParam('relayer', ethereum.Value.fromAddress(relayer))
-
-  newRelayerAddedEvent.parameters.push(relayerParam)
+  newRelayerAddedEvent.parameters = [
+    new ethereum.EventParam('relayer', ethereum.Value.fromAddress(relayer))
+  ]
 
   return newRelayerAddedEvent
 }
@@ -167,10 +127,9 @@ export function handleNewRelayerAddedEvents(events: RelayerAdded[]): void {
 // used to create a new `RelayerRemoved` test event
 export function createRelayerRemovedEvent(relayer: Address): RelayerRemoved {
   let newRelayerRemovedEvent = changetype<RelayerRemoved>(newMockEvent())
-  newRelayerRemovedEvent.parameters = new Array()
-  let relayerParam = new ethereum.EventParam('relayer', ethereum.Value.fromAddress(relayer))
-
-  newRelayerRemovedEvent.parameters.push(relayerParam)
+  newRelayerRemovedEvent.parameters = [
+    new ethereum.EventParam('relayer', ethereum.Value.fromAddress(relayer))
+  ]
 
   return newRelayerRemovedEvent
 }
@@ -185,13 +144,9 @@ export function handleNewRelayerRemovedEvents(events: RelayerRemoved[]): void {
 // used to create a new `RelayerThresholdChanged` test event
 export function createRelayerThresholdChangedEvent(newThreshold: BigInt): RelayerThresholdChanged {
   let newRelayerThresholdChangedEvent = changetype<RelayerThresholdChanged>(newMockEvent())
-  newRelayerThresholdChangedEvent.parameters = new Array()
-  let newThresholdParam = new ethereum.EventParam(
-    'newThreshold',
-    ethereum.Value.fromUnsignedBigInt(newThreshold)
-  )
-
-  newRelayerThresholdChangedEvent.parameters.push(newThresholdParam)
+  newRelayerThresholdChangedEvent.parameters = [
+    new ethereum.EventParam('newThreshold', ethereum.Value.fromUnsignedBigInt(newThreshold))
+  ]
 
   return newRelayerThresholdChangedEvent
 }
@@ -210,14 +165,11 @@ export function createRoleGrantedEvent(
   sender: Address
 ): RoleGranted {
   let newRoleGrantedEvent = changetype<RoleGranted>(newMockEvent())
-  newRoleGrantedEvent.parameters = new Array()
-  let roleParam = new ethereum.EventParam('role', ethereum.Value.fromFixedBytes(role))
-  let accountParam = new ethereum.EventParam('account', ethereum.Value.fromAddress(account))
-  let senderParam = new ethereum.EventParam('sender', ethereum.Value.fromAddress(sender))
-
-  newRoleGrantedEvent.parameters.push(roleParam)
-  newRoleGrantedEvent.parameters.push(accountParam)
-  newRoleGrantedEvent.parameters.push(senderParam)
+  newRoleGrantedEvent.parameters = [
+    new ethereum.EventParam('role', ethereum.Value.fromFixedBytes(role)),
+    new ethereum.EventParam('account', ethereum.Value.fromAddress(account)),
+    new ethereum.EventParam('sender', ethereum.Value.fromAddress(sender))
+  ]
 
   return newRoleGrantedEvent
 }
@@ -236,14 +188,11 @@ export function createRoleRevokedEvent(
   sender: Address
 ): RoleRevoked {
   let newRoleRevokedEvent = changetype<RoleRevoked>(newMockEvent())
-  newRoleRevokedEvent.parameters = new Array()
-  let roleParam = new ethereum.EventParam('role', ethereum.Value.fromFixedBytes(role))
-  let accountParam = new ethereum.EventParam('account', ethereum.Value.fromAddress(account))
-  let senderParam = new ethereum.EventParam('sender', ethereum.Value.fromAddress(sender))
-
-  newRoleRevokedEvent.parameters.push(roleParam)
-  newRoleRevokedEvent.parameters.push(accountParam)
-  newRoleRevokedEvent.parameters.push(senderParam)
+  newRoleRevokedEvent.parameters = [
+    new ethereum.EventParam('role', ethereum.Value.fromFixedBytes(role)),
+    new ethereum.EventParam('account', ethereum.Value.fromAddress(account)),
+    new ethereum.EventParam('sender', ethereum.Value.fromAddress(sender))
+  ]
 
   return newRoleRevokedEvent
 }
